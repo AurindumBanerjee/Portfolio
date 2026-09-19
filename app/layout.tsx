@@ -26,7 +26,7 @@ const pixel = Press_Start_2P({
   display: "swap",
 });
 
-const SITE_URL = "https://aurindum-banerjee.vercel.app";
+const SITE_URL = "https://aurindumbanerjee.vercel.app";
 const DESCRIPTION =
   "Portfolio of Aurindum Banerjee - CSE undergraduate at IIT Jodhpur working on LLM domain adaptation, multimodal prompt optimization, computer vision and systems engineering.";
 
