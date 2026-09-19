@@ -1,0 +1,471 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   The world's base layer.
+   Colours here mirror tailwind.config.ts so raw CSS can reach them too.
+   ========================================================================== */
+
+/*
+ * The world has two times of day. Both palettes are defined here as RGB
+ * triplets (`--c-*`, consumed by Tailwind) alongside hex aliases (`--void`
+ * and friends, consumed by the handwritten CSS below).
+ *
+ * Names are semantic rather than literal. `lantern` means "the warm key
+ * light": amber against the night sky, a deep confident blue by day.
+ */
+
+/* ---------- NIGHT (default) ---------- */
+:root,
+:root[data-theme="dark"] {
+  --c-void: 7 8 12;
+  --c-obsidian: 11 13 20;
+  --c-slate-deep: 17 21 34;
+  --c-slate-mid: 26 32 50;
+  --c-slate-soft: 37 45 67;
+  --c-slate-edge: 55 65 92;
+  /* stone-dim carries secondary copy (dates, captions, inactive nav), so it
+     has to clear 4.5:1 on --void rather than merely look subdued. */
+  --c-stone-dim: 129 140 168;
+  --c-stone-mid: 160 170 196;
+  --c-stone-bright: 213 219 235;
+  --c-lantern: 232 163 61;
+  --c-lantern-bright: 255 196 107;
+  --c-lantern-deep: 168 106 28;
+  --c-signal: 78 207 192;
+  --c-signal-bright: 127 240 226;
+  --c-signal-deep: 31 125 115;
+  --c-ember: 217 95 74;
+
+  --void: #07080c;
+  --obsidian: #0b0d14;
+  --slate-deep: #111522;
+  --slate-mid: #1a2032;
+  --slate-soft: #252d43;
+  --slate-edge: #37415c;
+  --stone-dim: #818ca8;
+  --stone-mid: #a0aac4;
+  --stone-bright: #d5dbeb;
+  --lantern: #e8a33d;
+  --lantern-bright: #ffc46b;
+  --lantern-deep: #a86a1c;
+  --signal: #4ecfc0;
+  --ember: #d95f4a;
+
+  /* Shadow tint used by pixel frames; must darken on light backgrounds too. */
+  --frame-shadow: rgba(0, 0, 0, 0.35);
+  --frame-highlight: rgba(255, 255, 255, 0.04);
+
+  /* Decorative inks. Each is heavy enough to read on night surfaces. */
+  --dither-ink: rgba(0, 0, 0, 0.5);
+  --scanline-ink: rgba(0, 0, 0, 0.16);
+  --text-shadow-ink: rgba(7, 8, 12, 0.9);
+
+  /* Text sitting on a filled lantern surface. */
+  --on-lantern: #07080c;
+
+  /* One pixel of the world, in CSS pixels. Everything decorative is a
+     multiple of this, which is what makes the art read as pixel art. */
+  --px: 4px;
+}
+
+/* ---------- DAY ----------
+   Blues replace the amber entirely: a cool paper-white world lit by a
+   strong indigo key light, with teal held back as the secondary accent.
+   Text tones are inverted so contrast stays well above AA. */
+:root[data-theme="light"] {
+  --c-void: 232 236 245;
+  --c-obsidian: 240 243 250;
+  --c-slate-deep: 255 255 255;
+  --c-slate-mid: 223 229 241;
+  --c-slate-soft: 201 210 228;
+  --c-slate-edge: 156 169 196;
+  --c-stone-dim: 92 104 133;
+  --c-stone-mid: 62 73 100;
+  --c-stone-bright: 20 28 48;
+  --c-lantern: 41 98 196;
+  --c-lantern-bright: 23 72 160;
+  --c-lantern-deep: 14 48 112;
+  /* Teal deep enough to clear 4.5:1 on the page background at body size. */
+  --c-signal: 10 104 116;
+  --c-signal-bright: 7 84 94;
+  --c-signal-deep: 5 62 70;
+  --c-ember: 186 58 42;
+
+  --void: #e8ecf5;
+  --obsidian: #f0f3fa;
+  --slate-deep: #ffffff;
+  --slate-mid: #dfe5f1;
+  --slate-soft: #c9d2e4;
+  --slate-edge: #9ca9c4;
+  --stone-dim: #5c6885;
+  --stone-mid: #3e4964;
+  --stone-bright: #141c30;
+  --lantern: #2962c4;
+  --lantern-bright: #1748a0;
+  --lantern-deep: #0e3070;
+  --signal: #0a6874;
+  --ember: #ba3a2a;
+
+  --frame-shadow: rgba(20, 28, 48, 0.16);
+  --frame-highlight: rgba(255, 255, 255, 0.85);
+
+  /* Far gentler on paper: the same alphas would read as grime by day. */
+  --dither-ink: rgba(20, 28, 48, 0.14);
+  --scanline-ink: rgba(20, 28, 48, 0.05);
+  /* No drop shadow by day: dark text on paper needs no lifting, and an
+     offset copy just reads as a printing fault. */
+  --text-shadow-ink: transparent;
+
+  /* White on the deep blue: 8.6:1, comfortably past AA. */
+  --on-lantern: #ffffff;
+}
+
+/* Colour changes are instant by default; this eases the big surfaces so the
+   switch reads as dawn breaking rather than a flash. Suppressed entirely
+   under reduced motion by the block at the end of this file. */
+:root.theme-transition,
+:root.theme-transition body,
+:root.theme-transition .pixel-frame {
+  transition:
+    background-color 320ms ease,
+    color 320ms ease,
+    box-shadow 320ms ease;
+}
+
+@layer base {
+  * {
+    @apply border-slate-soft;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    /* Nav is fixed; anchors must clear it. */
+    scroll-padding-top: 5.5rem;
+  }
+
+  body {
+    background-color: var(--void);
+    color: var(--stone-bright);
+    @apply font-sans antialiased;
+    overflow-x: hidden;
+  }
+
+  /* Headings carry the pixel voice; body copy stays modern and readable. */
+  h1,
+  h2,
+  h3 {
+    @apply font-pixel;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background-color: var(--lantern);
+    color: var(--on-lantern);
+  }
+
+  /* Focus is a visible pixel ring — never removed, only restyled. */
+  :focus-visible {
+    outline: 3px solid var(--lantern-bright);
+    outline-offset: 3px;
+  }
+
+  /* A pixel-styled scrollbar, so even the chrome belongs to the world. */
+  ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--obsidian);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--slate-edge);
+    border: 3px solid var(--obsidian);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--stone-dim);
+  }
+}
+
+@layer components {
+  /* ------------------------------------------------------------------
+     Pixel borders. Built from layered box-shadows rather than images,
+     so they stay crisp at any zoom and cost no requests.
+     ------------------------------------------------------------------ */
+
+  /* A hard 4px frame with notched corners, like a dialogue box. */
+  .pixel-frame {
+    position: relative;
+    background-color: var(--slate-deep);
+    box-shadow:
+      0 0 0 var(--px) var(--slate-edge),
+      inset 0 var(--px) 0 0 var(--frame-highlight),
+      inset 0 calc(var(--px) * -1) 0 0 var(--frame-shadow);
+  }
+
+  /* The notches: four small squares of page background at the corners,
+     which is what turns a rectangle into a pixel-art panel. */
+  .pixel-frame::before,
+  .pixel-frame::after {
+    content: "";
+    position: absolute;
+    width: var(--px);
+    height: var(--px);
+    background-color: var(--void);
+    pointer-events: none;
+  }
+  .pixel-frame::before {
+    top: calc(var(--px) * -1);
+    left: calc(var(--px) * -1);
+    box-shadow: calc(100% + var(--px) * 2 + 100%) 0 0 0 var(--void);
+  }
+  .pixel-frame::after {
+    bottom: calc(var(--px) * -1);
+    left: calc(var(--px) * -1);
+    box-shadow: calc(100% + var(--px) * 2 + 100%) 0 0 0 var(--void);
+  }
+
+  /* Lantern-lit variant, for the active/important panel. */
+  .pixel-frame-lit {
+    box-shadow:
+      0 0 0 var(--px) var(--lantern-deep),
+      0 0 0 calc(var(--px) * 2) rgb(var(--c-lantern) / 0.16),
+      inset 0 var(--px) 0 0 rgb(var(--c-lantern-bright) / 0.12);
+  }
+
+  /* Cold signal variant. */
+  .pixel-frame-signal {
+    box-shadow:
+      0 0 0 var(--px) var(--signal),
+      0 0 0 calc(var(--px) * 2) rgb(var(--c-signal) / 0.14);
+  }
+
+  /* Panels inside a hovered/focused card light up. A component class cannot
+     be produced by a Tailwind variant, so the lit state is expressed here. */
+  .group:hover .pixel-frame-hover,
+  .group:focus-visible .pixel-frame-hover {
+    box-shadow:
+      0 0 0 var(--px) var(--lantern-deep),
+      0 0 0 calc(var(--px) * 2) rgb(var(--c-lantern) / 0.16),
+      inset 0 var(--px) 0 0 rgb(var(--c-lantern-bright) / 0.12);
+  }
+
+  /* ------------------------------------------------------------------
+     Surfaces
+     ------------------------------------------------------------------ */
+
+  /* Dithered shading — a 2px checkerboard, the classic way to fake a
+     gradient with a limited palette. Used instead of smooth gradients. */
+  .dither {
+    background-image:
+      linear-gradient(45deg, var(--dither-ink) 25%, transparent 25%),
+      linear-gradient(-45deg, var(--dither-ink) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, var(--dither-ink) 75%),
+      linear-gradient(-45deg, transparent 75%, var(--dither-ink) 75%);
+    background-size: 4px 4px;
+    background-position: 0 0, 0 2px, 2px -2px, -2px 0;
+  }
+
+  /* A faint pixel grid, like a blueprint underlay. */
+  .pixel-grid {
+    background-image:
+      linear-gradient(to right, rgb(var(--c-slate-edge) / 0.22) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(var(--c-slate-edge) / 0.22) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  /* CRT scanlines. Deliberately subtle — 3% alpha, not a novelty filter. */
+  .crt-lines {
+    position: relative;
+  }
+  .crt-lines::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0) 0px,
+      rgba(0, 0, 0, 0) 2px,
+      var(--scanline-ink) 3px,
+      rgba(0, 0, 0, 0) 4px
+    );
+    mix-blend-mode: multiply;
+  }
+
+  /* Vignette so every section darkens toward its edges, as if lit from
+     within. This is what stitches the sections into one continuous world.
+
+     It must sit above the artwork but *below* the copy, so it is pinned to
+     z-index 0 while section content is lifted to z-index 1. Without the
+     explicit z-index the pseudo-element paints last and dims the text. */
+  .vignette::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: radial-gradient(
+      ellipse at 50% 40%,
+      transparent 35%,
+      rgb(var(--c-void) / 0.55) 78%,
+      rgb(var(--c-void) / 0.92) 100%
+    );
+  }
+
+  /* An extra wash behind the hero copy, needed only by day: the light sky
+     is close in value to the body text, so the copy needs more separation
+     than the night scrim provides. */
+  .hero-scrim-day {
+    display: none;
+  }
+  :root[data-theme="light"] .hero-scrim-day {
+    display: block;
+  }
+
+  /* ------------------------------------------------------------------
+     Typography accents
+     ------------------------------------------------------------------ */
+
+  .label-pixel {
+    @apply font-pixel text-pixel-sm uppercase tracking-[0.18em] text-stone-dim;
+  }
+
+  /* Section eyebrow: a pixel rule, then the label. */
+  .eyebrow {
+    @apply label-pixel flex items-center gap-3 text-lantern;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 24px;
+    height: var(--px);
+    background-color: currentColor;
+    flex: none;
+  }
+
+  /* ------------------------------------------------------------------
+     Controls
+     ------------------------------------------------------------------ */
+
+  .pixel-button {
+    @apply font-pixel text-pixel-base uppercase tracking-[0.1em];
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3;
+    position: relative;
+    /* Explicit rather than inheriting --void: night wants near-black on
+       amber, day wants near-white on deep blue. */
+    color: var(--on-lantern);
+    background-color: var(--lantern);
+    box-shadow:
+      0 var(--px) 0 0 var(--lantern-deep),
+      0 0 0 var(--px) var(--void);
+    transition:
+      transform 120ms steps(2, end),
+      background-color 150ms ease,
+      box-shadow 120ms steps(2, end);
+  }
+  .pixel-button:hover {
+    background-color: var(--lantern-bright);
+    transform: translateY(-2px);
+    box-shadow:
+      0 calc(var(--px) + 2px) 0 0 var(--lantern-deep),
+      0 0 0 var(--px) var(--void);
+  }
+  .pixel-button:active {
+    transform: translateY(2px);
+    box-shadow:
+      0 0 0 0 var(--lantern-deep),
+      0 0 0 var(--px) var(--void);
+  }
+
+  .pixel-button-ghost {
+    @apply font-pixel text-pixel-base uppercase tracking-[0.1em];
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3;
+    color: var(--stone-bright);
+    background-color: transparent;
+    box-shadow: 0 0 0 var(--px) var(--slate-edge);
+    transition:
+      color 150ms ease,
+      background-color 150ms ease,
+      box-shadow 120ms steps(2, end),
+      transform 120ms steps(2, end);
+  }
+  .pixel-button-ghost:hover {
+    color: var(--lantern-bright);
+    background-color: rgb(var(--c-lantern) / 0.09);
+    box-shadow: 0 0 0 var(--px) var(--lantern);
+    transform: translateY(-2px);
+  }
+  .pixel-button-ghost:active {
+    transform: translateY(1px);
+  }
+
+  /* Small inline tag for technologies. */
+  .tech-tag {
+    @apply font-mono text-[0.7rem] leading-none;
+    @apply inline-flex items-center px-2 py-1.5;
+    color: var(--stone-mid);
+    background-color: rgb(var(--c-slate-mid) / 0.75);
+    box-shadow: inset 0 0 0 1px var(--slate-soft);
+    white-space: nowrap;
+  }
+
+  /* ------------------------------------------------------------------
+     Pixel-art rendering
+     ------------------------------------------------------------------ */
+
+  .crisp {
+    shape-rendering: crispEdges;
+    image-rendering: pixelated;
+  }
+}
+
+@layer utilities {
+  /* Typewriter caret used by the hero. */
+  .caret::after {
+    content: "\2588";
+    @apply ml-0.5 text-lantern;
+    animation: blink 1.1s steps(2, end) infinite;
+  }
+
+  .text-shadow-pixel {
+    text-shadow: 3px 3px 0 var(--text-shadow-ink);
+  }
+}
+
+/* ==========================================================================
+   Reduced motion: stop every decorative animation, keep every layout.
+   The site must convey the same information either way.
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* The caret would otherwise sit mid-blink and look like a rendering bug. */
+  .caret::after {
+    opacity: 1;
+  }
+}
+
+/* On coarse pointers the custom cursor never mounts, so the real one must
+   stay visible and the hover-only affordances must not linger. */
+@media (hover: none), (pointer: coarse) {
+  body {
+    cursor: auto;
+  }
+}
