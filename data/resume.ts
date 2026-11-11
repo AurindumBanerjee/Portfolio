@@ -1,13 +1,14 @@
 /**
  * Single source of truth for all portfolio content.
  *
- * Every value here is transcribed from the resumes in the repository root
- * (main.tex, IITJ_ML_Resume.pdf, IITJ_SDE_Resume.pdf,
- * Everything_Soft_Skills_Resume_SC.pdf). Where the resumes disagree, main.tex
- * and the 2026 PDFs win, since they are the most recent.
+ * Project facts, metrics and skills come from the project repositories
+ * themselves (source, READMEs, ADRs and committed benchmark results under
+ * github.com/AurindumBanerjee). Work with no repository (InfoEdge, IIT Jodhpur
+ * research, TinyML) is transcribed from the 08 Nov 2026 resume and earlier
+ * resumes.
  *
- * Nothing in this file may be invented. If a link or metric is not in a
- * resume, it is omitted rather than guessed.
+ * Nothing in this file may be invented. If a link, metric or skill is not in
+ * a repository or the resume, it is omitted rather than guessed.
  */
 
 /** Visual environment assigned to a project. Purely a theme — not a game level. */
@@ -115,14 +116,14 @@ export const profile: Profile = {
   degree: "Bachelor of Technology",
   branch: "Computer Science and Engineering",
   institute: "Indian Institute of Technology, Jodhpur",
-  tagline: "LLM adaptation, computer vision, and systems engineering.",
+  tagline: "LLM adaptation, retrieval, and systems engineering.",
   intro:
-    "Final-year CSE undergraduate at IIT Jodhpur. I work on teaching language models domain knowledge they were never trained on, on vision pipelines that run under real constraints, and on systems built close to the metal - shells, databases, and microcontrollers.",
+    "Final-year CSE undergraduate at IIT Jodhpur. I work on teaching language models domain knowledge they were never trained on, on hybrid retrieval that cites the page an answer came from, and on systems built from the ground up - a collaborative editor, a database engine, and a Unix shell.",
   focusAreas: [
     "LLM domain adaptation",
-    "Multimodal prompt optimization",
-    "Computer vision",
-    "Systems & security",
+    "Hybrid retrieval & RAG",
+    "Real-time & distributed systems",
+    "Database & OS internals",
   ],
 };
 
@@ -205,7 +206,7 @@ export const experience: readonly ExperienceEntry[] = [
     scene: "laboratory",
     highlights: [
       "Built a domain adaptation pipeline (Continual Pre-Training + Supervised Fine-Tuning) that teaches LLMs knowledge of Indian companies.",
-      "Ran controlled data-composition experiments on paraphrasing, replication, and augmentation, raising correctness from 10.3% to 74.0% on held-out company questions.",
+      "Ran controlled data-composition experiments on paraphrasing, replication, and augmentation, raising correctness from 10.3% to 74.0% and reference coverage from 8.2% to 73.2% on held-out company questions.",
       "Built an LLM-as-a-judge and lm-eval-harness evaluation suite to measure correctness, hallucination, and general-capability retention across experiments.",
     ],
     tech: ["Python", "PyTorch", "Hugging Face Transformers", "vLLM", "lm-eval-harness"],
@@ -260,6 +261,99 @@ export const experience: readonly ExperienceEntry[] = [
 
 export const projects: readonly Project[] = [
   {
+    id: "inkwell",
+    name: "InkWell",
+    summary: "Real-time collaborative Markdown editor with CRDT sync across a multi-node server tier.",
+    period: "Oct 2026",
+    scene: "workshop",
+    problem:
+      "Several people editing one document at once need to see each other's changes within milliseconds, keep working offline, and stay consistent when a server node fails.",
+    approach: [
+      "Built real-time editing on the Yjs CRDT over WebSockets, with presence, offline edits stored in the browser and merged on reconnect, version history with restore, and anchored comments.",
+      "Scaled the sync tier across several Node.js servers behind nginx, using Redis pub/sub to keep documents consistent during failover and PostgreSQL for storage, sign-in and role-based sharing.",
+      "In a simulated test with 1,000 people editing at once, edits reached other users within 4 ms for 95% of updates, down from 15 ms, by keeping everyone on the same document on the same server.",
+      "Document search went from 124 ms to 5 ms (median, rare terms, 20,000 documents) using PostgreSQL full-text search.",
+      "Covered the main user flows (two editors, offline, viewer role, comments, history, search) with Playwright end-to-end tests.",
+    ],
+    tech: [
+      "TypeScript",
+      "Next.js",
+      "Fastify",
+      "Yjs",
+      "WebSockets",
+      "PostgreSQL",
+      "Redis",
+      "nginx",
+      "Docker",
+      "Playwright",
+      "k6",
+      "GitHub Actions",
+    ],
+    metrics: [
+      { label: "p95 sync (simulated 1,000 editors)", value: "4 ms" },
+      { label: "Search", value: "124 → 5 ms" },
+    ],
+    repo: "https://github.com/AurindumBanerjee/InkWell",
+    featured: true,
+  },
+  {
+    id: "delphion",
+    name: "Delphion",
+    summary: "Hybrid-retrieval RAG over PDFs, with streamed answers that cite the page.",
+    period: "May 2025 - Oct 2026",
+    scene: "archive",
+    problem:
+      "Dense embeddings match meaning but blur rare, exact terms such as names, numbers and jargon, so dense-only retrieval often misses the passage that actually answers a question.",
+    approach: [
+      "Built a single Gradio app that indexes uploaded PDFs with BM25 and local ONNX dense embeddings (fastembed) in ChromaDB, fuses the two rankings with Reciprocal Rank Fusion, and reranks the top 20 with a cross-encoder.",
+      "Answers stream token by token with inline citations to the source passage and page.",
+      "Wrote a span-based evaluation (42 questions over 3 books): hybrid retrieval with reranking improved hit@1 from 0.45 to 0.88 and MRR@5 from 0.58 to 0.92 over dense-only retrieval.",
+      "Added a rate-limit panel that reports whose limit was hit, and lets visitors bring their own API key.",
+    ],
+    tech: [
+      "Python",
+      "Gradio",
+      "fastembed",
+      "ONNX",
+      "ChromaDB",
+      "BM25",
+      "PyMuPDF",
+      "pytest",
+      "Hugging Face Spaces",
+    ],
+    metrics: [
+      { label: "hit@1", value: "0.45 → 0.88" },
+      { label: "MRR@5", value: "0.58 → 0.92" },
+      { label: "Eval set", value: "42 questions, 3 books" },
+    ],
+    repo: "https://github.com/AurindumBanerjee/Delphion",
+    featured: true,
+  },
+  {
+    id: "aggregate-queries-optimiser",
+    name: "Aggregate Queries Optimiser",
+    summary: "A C++ database engine whose aggregate indexes answer range SUM/MIN/MAX/COUNT in logarithmic time.",
+    period: "Sep 2024 - Oct 2026",
+    scene: "datastore",
+    problem:
+      "Aggregate queries over a range of rows degrade to reading every matching row unless the storage layer is built to answer ranges directly.",
+    approach: [
+      "Built a database engine with 4 KB pages, a buffer pool, write-ahead logging with ARIES-style recovery, and a SQL layer, with a single writer and multiple readers.",
+      "Added an aggregate-augmented B+ tree that caches count, sum, min and max in every internal node, so range aggregates stay logarithmic.",
+      "A range SUM over 1% of 1M rows takes 15 µs, against 1.47 ms for SQLite with a covering index (median of 3 runs).",
+      "SQLite is still faster at bulk load, point lookups and full scans, which this project did not set out to beat.",
+      "98 tests with 95% line coverage, including crash-recovery tests and a differential fuzz test against SQLite.",
+    ],
+    tech: ["C++", "CMake", "GoogleTest", "SQLite", "Sanitizers", "GitHub Actions", "Docker"],
+    metrics: [
+      { label: "Range SUM, 1% of 1M rows", value: "15 µs vs 1.47 ms" },
+      { label: "Tests", value: "98" },
+      { label: "Line coverage", value: "95%" },
+    ],
+    repo: "https://github.com/AurindumBanerjee/Aggregate-Queries-Optimiser",
+    featured: true,
+  },
+  {
     id: "ipo-modernisation",
     name: "IPO Modernisation",
     summary: "Gradient-free Interpretable Prompt Optimization for CLIP, run fully locally.",
@@ -292,6 +386,28 @@ export const projects: readonly Project[] = [
     featured: true,
   },
   {
+    id: "alpshell",
+    name: "AlpShell",
+    summary: "A Unix shell in C++ with job control, pipelines, redirection and expansion, tested against bash.",
+    period: "Mar 2025 - Oct 2026",
+    scene: "terminal",
+    problem:
+      "A shell is the thinnest useful layer over the kernel - writing one means handling process lifecycles and redirection directly, with no runtime to hide behind.",
+    approach: [
+      "Implemented job control: every pipeline runs in its own process group, with fg, bg, kill and jobs, and Ctrl+Z stops the foreground job without stopping the shell.",
+      "Supports pipelines, redirections including 2>&1, command chaining with ;, && and ||, $?, variable expansion and file-name globbing.",
+      "Tested with 65 scripts run under both bash and AlpShell whose output must match (7 documented differences), plus unit and pseudo-terminal tests.",
+      "CI runs every test again under AddressSanitizer and UBSan.",
+    ],
+    tech: ["C++", "Linux System Calls", "termios", "Python", "Sanitizers", "GitHub Actions"],
+    metrics: [
+      { label: "Script tests vs bash", value: "65" },
+      { label: "Documented differences", value: "7" },
+    ],
+    repo: "https://github.com/AurindumBanerjee/AlpShell",
+    featured: true,
+  },
+  {
     id: "bxss",
     name: "BXSS Attack & Defense",
     summary: "Dockerized testbed for automated Blind XSS attack and defense evaluation.",
@@ -320,34 +436,6 @@ export const projects: readonly Project[] = [
     featured: true,
   },
   {
-    id: "delphion",
-    name: "Delphion",
-    summary: "Document-grounded RAG system with modular, independently deployable services.",
-    period: "May 2025",
-    scene: "archive",
-    problem:
-      "Answering questions over a corpus of PDFs requires retrieval and generation to be tuned independently - which a monolithic pipeline makes awkward.",
-    approach: [
-      "Engineered a question-answering system over PDFs using a modular FastAPI backend served via Modal containers.",
-      "Designed microservices - Embedder, Retriever, Generator - with clear API boundaries and vector DB sessions.",
-      "Integrated LangChain-based chunking (recursive, semantic) and OpenAI API for document embeddings.",
-      "Built an interactive Gradio UI with real-time chunking config, top-k tuning, and generation previews.",
-    ],
-    tech: [
-      "Python",
-      "FastAPI",
-      "Modal",
-      "Gradio",
-      "LangChain",
-      "ChromaDB",
-      "NLTK",
-      "Hugging Face Spaces",
-    ],
-    metrics: [],
-    repo: "https://github.com/AurindumBanerjee/Delphion",
-    featured: true,
-  },
-  {
     id: "script-identifier",
     name: "Script-Identifier",
     summary: "Scene-text script classification across 13 Indic languages.",
@@ -359,7 +447,7 @@ export const projects: readonly Project[] = [
       "Tried out models including Logistic Regression, SVM, KNN, ANN, Random Forest, Decision Trees and XGBoost.",
       "Used features (HOG, SIFT) and deep features (ResNet, VGG, ViT) with dimensionality reduction (PCA, LDA).",
       "Achieved 77.5% accuracy and 0.60 F1 score; improved minority-class F1 by 12.7% using an ANN + ViT with Siamese Learning approach.",
-      "Deployed a real-time classification pipeline on GCP using FastAPI and Next.js with Dockerized CI/CD.",
+      "Built a real-time classification app with a FastAPI backend and a Next.js frontend.",
     ],
     tech: [
       "Python",
@@ -379,42 +467,6 @@ export const projects: readonly Project[] = [
       { label: "Scripts covered", value: "13" },
     ],
     repo: "https://github.com/AurindumBanerjee/Script-Identifier",
-    featured: true,
-  },
-  {
-    id: "alpshell",
-    name: "AlpShell",
-    summary: "Lightweight Unix shell with command parsing, job control, and I/O redirection.",
-    period: "March 2025 - April 2025",
-    scene: "terminal",
-    problem:
-      "A shell is the thinnest useful layer over the kernel - writing one means handling process lifecycles and redirection directly, with no runtime to hide behind.",
-    approach: [
-      "Developed a custom tokenizer, parser, and process manager modules, leveraging Linux system calls for job control and history management.",
-      "Focused on modular design and performance optimization for low-overhead, responsive execution.",
-    ],
-    tech: ["C++", "Linux System Calls", "Shell Scripting", "Data Structures"],
-    metrics: [],
-    repo: "https://github.com/AurindumBanerjee/AlpShell",
-    featured: true,
-  },
-  {
-    id: "segment-tree-dbms",
-    name: "Segment Tree DBMS",
-    summary: "A database management system in C++ with logarithmic-time aggregate queries.",
-    period: "September 2024 - December 2024",
-    scene: "datastore",
-    problem:
-      "Aggregate queries over a table degrade to a full scan unless the storage layer is built to answer ranges directly.",
-    approach: [
-      "Defined CRUD operations and aggregate queries from scratch, along with UI.",
-      "Stored structured data in CSV files for persistence.",
-      "Loaded CSV data into B-Trees for efficient in-memory CRUD operations.",
-      "Utilized Segment Trees to enable logarithmic-time aggregate queries, like SUM, MIN, MAX, COUNT.",
-    ],
-    tech: ["C++", "GCC Compiler", "Data Structures", "Git/GitHub"],
-    metrics: [],
-    repo: "https://github.com/AurindumBanerjee/Aggregate-Queries-Optimiser",
     featured: true,
   },
   {
@@ -518,13 +570,24 @@ export const skillCategories: readonly SkillCategory[] = [
     id: "backend",
     label: "Web & Backend",
     icon: "server",
-    items: ["FastAPI", "Node.js", "Express.js", "REST APIs", "Streamlit", "Gradio", "Next.js"],
+    items: [
+      "FastAPI",
+      "Node.js",
+      "Express.js",
+      "Fastify",
+      "WebSockets",
+      "Yjs",
+      "REST APIs",
+      "Streamlit",
+      "Gradio",
+      "Next.js",
+    ],
   },
   {
     id: "databases",
     label: "Databases",
     icon: "database",
-    items: ["MySQL", "ChromaDB"],
+    items: ["PostgreSQL", "Redis", "SQLite", "MySQL", "ChromaDB"],
   },
   {
     id: "devops",
@@ -534,6 +597,13 @@ export const skillCategories: readonly SkillCategory[] = [
       "Git",
       "Docker",
       "Linux",
+      "GitHub Actions",
+      "nginx",
+      "Playwright",
+      "pytest",
+      "GoogleTest",
+      "k6",
+      "Sanitizers",
       "Jupyter",
       "Google Colab",
       "Hugging Face Spaces",
