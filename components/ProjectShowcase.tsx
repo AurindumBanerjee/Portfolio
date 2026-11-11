@@ -1,9 +1,9 @@
 ﻿"use client";
 
-import { useState, useRef } from "react";
+import { useCallback, useState, useRef } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { ArrowUpRight, Github } from "lucide-react";
-import { projects, type Project } from "@/data/resume";
+import { projects, type Project, type ProjectCategory } from "@/data/resume";
 import { Section, PixelPanel } from "./Section";
 import { PixelEnvironment } from "./PixelEnvironment";
 import { ProjectModal } from "./ProjectModal";
@@ -202,10 +202,39 @@ function CompactCard({
             <h3 className="text-pixel-base leading-relaxed text-stone-bright">
               {project.name}
             </h3>
-            <p className="mt-2.5 flex-1 text-sm leading-relaxed text-stone-mid">
-              {project.summary}
-            </p>
-            <p className="mt-4 font-pixel text-pixel-sm text-stone-dim">{project.period}</p>
+            <p className="mt-1.5 font-pixel text-pixel-sm text-stone-dim">{project.period}</p>
+            <p className="mt-2.5 text-sm leading-relaxed text-stone-mid">{project.summary}</p>
+
+            {project.metrics.length > 0 ? (
+              <dl className="mt-4 flex flex-wrap gap-x-6 gap-y-3">
+                {project.metrics.slice(0, 2).map((metric) => (
+                  <div key={metric.label}>
+                    <dt className="label-pixel text-[0.5rem]">{metric.label}</dt>
+                    <dd className="mt-1 font-pixel text-pixel-sm text-signal">{metric.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            ) : null}
+
+            <ul className="mt-4 flex flex-1 flex-wrap content-start gap-1.5">
+              {project.tech.slice(0, 4).map((tech) => (
+                <li key={tech} className="tech-tag">
+                  {tech}
+                </li>
+              ))}
+              {project.tech.length > 4 ? (
+                <li className="tech-tag text-stone-dim">+{project.tech.length - 4}</li>
+              ) : null}
+            </ul>
+
+            <span className="mt-5 inline-flex items-center gap-2 font-pixel text-pixel-sm uppercase tracking-[0.14em] text-lantern transition-colors group-hover:text-lantern-bright">
+              Read case study
+              <ArrowUpRight
+                size={14}
+                aria-hidden="true"
+                className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+              />
+            </span>
           </div>
         </PixelPanel>
       </TiltCard>
@@ -213,11 +242,27 @@ function CompactCard({
   );
 }
 
+const FILTERS: readonly { readonly id: "all" | ProjectCategory; readonly label: string }[] = [
+  { id: "all", label: "All" },
+  { id: "ai", label: "AI & Retrieval" },
+  { id: "systems", label: "Systems & DB" },
+  { id: "vision", label: "Vision & Edge" },
+  { id: "security", label: "Security" },
+];
+
 export function ProjectShowcase() {
   const [openId, setOpenId] = useState<string | null>(null);
-  const featured = projects.filter((p) => p.featured);
-  const rest = projects.filter((p) => !p.featured);
-  const open = projects.find((p) => p.id === openId) ?? null;
+  const [filter, setFilter] = useState<"all" | ProjectCategory>("all");
+
+  const visible = projects.filter((p) => filter === "all" || p.category === filter);
+  const featured = visible.filter((p) => p.featured);
+  const rest = visible.filter((p) => !p.featured);
+  // Modal navigation follows the order the cards are shown in.
+  const ordered = [...featured, ...rest];
+  const openIndex = ordered.findIndex((p) => p.id === openId);
+  const open = openIndex >= 0 ? (ordered[openIndex] ?? null) : null;
+
+  const close = useCallback(() => setOpenId(null), []);
 
   return (
     <>
@@ -227,28 +272,68 @@ export function ProjectShowcase() {
         title="Projects."
         lead="Each project below is a place I spent real time. Open any one for the problem it addresses, the approach, and the results."
       >
-        <div className="space-y-6">
-          {featured.map((project, i) => (
-            <FeatureCard
-              key={project.id}
-              project={project}
-              index={i}
-              onOpen={() => setOpenId(project.id)}
-            />
-          ))}
+        {/* Filter: toggle buttons rather than ARIA tabs, since every option
+            filters the same list instead of switching between panels. */}
+        <div role="group" aria-label="Filter projects by area" className="mb-8 flex flex-wrap gap-2">
+          {FILTERS.map((f) => {
+            const active = filter === f.id;
+            return (
+              <button
+                key={f.id}
+                type="button"
+                aria-pressed={active}
+                onClick={() => setFilter(f.id)}
+                className={cn(
+                  "px-3 py-2 font-pixel text-pixel-sm uppercase tracking-[0.12em] transition-colors",
+                  active
+                    ? "bg-lantern text-[var(--on-lantern)]"
+                    : "bg-slate-deep text-stone-mid shadow-[inset_0_0_0_2px_var(--slate-edge)] hover:text-lantern-bright",
+                )}
+              >
+                {f.label}
+              </button>
+            );
+          })}
         </div>
+        <p className="sr-only" aria-live="polite">
+          {`${visible.length} project${visible.length === 1 ? "" : "s"} shown`}
+        </p>
 
-        <h3 className="label-pixel mb-5 mt-16 text-lantern">Also built</h3>
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {rest.map((project, i) => (
-            <CompactCard
-              key={project.id}
-              project={project}
-              index={i}
-              onOpen={() => setOpenId(project.id)}
-            />
-          ))}
-        </div>
+        {featured.length > 0 ? (
+          <div className="space-y-6">
+            {featured.map((project, i) => (
+              <FeatureCard
+                key={project.id}
+                project={project}
+                index={i}
+                onOpen={() => setOpenId(project.id)}
+              />
+            ))}
+          </div>
+        ) : null}
+
+        {rest.length > 0 ? (
+          <>
+            <h3
+              className={cn(
+                "label-pixel mb-5 text-lantern",
+                featured.length > 0 ? "mt-16" : "mt-2",
+              )}
+            >
+              Also built
+            </h3>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {rest.map((project, i) => (
+                <CompactCard
+                  key={project.id}
+                  project={project}
+                  index={i}
+                  onOpen={() => setOpenId(project.id)}
+                />
+              ))}
+            </div>
+          </>
+        ) : null}
 
         {/* A direct route to the source, for visitors who prefer to read code. */}
         <div className="mt-14 flex justify-center">
@@ -264,7 +349,13 @@ export function ProjectShowcase() {
         </div>
       </Section>
 
-      <ProjectModal project={open} onClose={() => setOpenId(null)} />
+      <ProjectModal
+        project={open}
+        onClose={close}
+        prev={openIndex > 0 ? (ordered[openIndex - 1] ?? null) : null}
+        next={openIndex >= 0 ? (ordered[openIndex + 1] ?? null) : null}
+        onNavigate={setOpenId}
+      />
     </>
   );
 }

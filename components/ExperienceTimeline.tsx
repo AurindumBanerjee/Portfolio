@@ -26,7 +26,7 @@ export function ExperienceTimeline() {
           className="absolute left-[15px] top-2 bottom-2 w-1 sm:left-[23px]"
           style={{
             backgroundImage:
-              "repeating-linear-gradient(to bottom, #37415c 0 8px, transparent 8px 16px)",
+              "repeating-linear-gradient(to bottom, var(--slate-edge) 0 8px, transparent 8px 16px)",
           }}
         />
 
@@ -44,7 +44,7 @@ export function ExperienceTimeline() {
               aria-hidden="true"
               className="absolute left-0 top-6 flex h-8 w-8 items-center justify-center sm:h-12 sm:w-12"
             >
-              <span className="h-4 w-4 bg-lantern shadow-[0_0_0_4px_#07080c,0_0_0_7px_#37415c] sm:h-5 sm:w-5" />
+              <span className="h-4 w-4 bg-lantern shadow-[0_0_0_4px_var(--void),0_0_0_7px_var(--slate-edge)] sm:h-5 sm:w-5" />
             </span>
 
             <PixelPanel className="overflow-hidden">
@@ -81,6 +81,19 @@ export function ExperienceTimeline() {
                     </span>
                   </div>
                 </div>
+
+                {entry.metrics && entry.metrics.length > 0 ? (
+                  <dl className="mb-5 flex flex-wrap gap-x-8 gap-y-4">
+                    {entry.metrics.map((metric) => (
+                      <div key={metric.label}>
+                        <dt className="label-pixel text-[0.55rem]">{metric.label}</dt>
+                        <dd className="mt-1 font-pixel text-pixel-base text-signal">
+                          {metric.value}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                ) : null}
 
                 <ul className="space-y-2.5">
                   {entry.highlights.map((point) => (

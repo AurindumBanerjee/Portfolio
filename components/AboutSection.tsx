@@ -1,37 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { education, profile, courseGroups } from "@/data/resume";
+import { education, profile, courseGroups, pillars } from "@/data/resume";
 import { Section, PixelPanel } from "./Section";
-import { PixelIcon, type PixelIconName } from "./PixelIcon";
-
-/** The four things I work on, each with its own pixel glyph. */
-const PILLARS: readonly {
-  readonly icon: PixelIconName;
-  readonly title: string;
-  readonly body: string;
-}[] = [
-  {
-    icon: "brain",
-    title: "LLMs & Adaptation",
-    body: "Continual pre-training and supervised fine-tuning to give language models knowledge they never saw in training - and evaluation harnesses to prove the knowledge stuck without breaking everything else.",
-  },
-  {
-    icon: "eye",
-    title: "Computer Vision",
-    body: "Classical features and deep backbones side by side: HOG and SIFT against ResNet, VGG and ViT, on script identification, surveillance video, and multimodal prompt optimization for CLIP.",
-  },
-  {
-    icon: "terminal",
-    title: "Systems & Security",
-    body: "A Unix shell, a segment-tree database engine, a neural network in C, and a Dockerized Blind XSS testbed - built low enough to see the system calls.",
-  },
-  {
-    icon: "chip",
-    title: "Research",
-    body: "TinyML inference on an ARM Cortex-M4, and theoretical work on Diversity Maximisation in metric spaces with Dr. Tanmay Nitin Inamdar.",
-  },
-];
+import { PixelIcon } from "./PixelIcon";
 
 export function AboutSection() {
   return (
@@ -42,7 +14,7 @@ export function AboutSection() {
       lead={`I'm a ${profile.degree} student in ${profile.branch} at ${profile.institute}, currently holding a 9.09 CGPA. My work runs along one axis: taking a capable model or system and making it work under a real constraint - a domain it doesn't know, a class it rarely sees, or a board with kilobytes of RAM.`}
     >
       <div className="grid gap-6 lg:grid-cols-2">
-        {PILLARS.map((pillar, i) => (
+        {pillars.map((pillar, i) => (
           <motion.div
             key={pillar.title}
             initial={{ opacity: 0, y: 20 }}

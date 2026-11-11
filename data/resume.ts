@@ -59,7 +59,19 @@ export interface ExperienceEntry {
   readonly scene: SceneId;
   readonly highlights: readonly string[];
   readonly tech: readonly string[];
+  /** Headline results, shown as a metric row on the card. */
+  readonly metrics?: readonly ProjectMetric[];
 }
+
+/** One of the four areas of work shown in the About section. */
+export interface Pillar {
+  readonly icon: "brain" | "server" | "database" | "chip";
+  readonly title: string;
+  readonly body: string;
+}
+
+/** Filter group a project belongs to in the showcase. */
+export type ProjectCategory = "ai" | "systems" | "vision" | "security";
 
 export interface ProjectMetric {
   readonly label: string;
@@ -73,6 +85,7 @@ export interface Project {
   readonly summary: string;
   readonly period: string;
   readonly scene: SceneId;
+  readonly category: ProjectCategory;
   /** One-line framing of what problem this addresses, derived from resume bullets. */
   readonly problem: string;
   /** Technical approach bullets, transcribed from the resume. */
@@ -126,6 +139,29 @@ export const profile: Profile = {
     "Database & OS internals",
   ],
 };
+
+export const pillars: readonly Pillar[] = [
+  {
+    icon: "brain",
+    title: "LLMs & Retrieval",
+    body: "Continual pre-training and supervised fine-tuning that teach language models company knowledge, lifting factual QA accuracy from 10.3% to 74.0% - and hybrid BM25 plus dense retrieval with cross-encoder reranking, so answers cite the page they came from.",
+  },
+  {
+    icon: "server",
+    title: "Real-Time & Distributed Systems",
+    body: "A collaborative editor that syncs edits through the Yjs CRDT over WebSockets, across several Node.js servers behind nginx with Redis pub/sub keeping documents consistent, load-tested with 1,000 synthetic editors.",
+  },
+  {
+    icon: "database",
+    title: "Database & OS Internals",
+    body: "An aggregate-augmented B+ tree database engine with ARIES-style write-ahead logging, a Unix shell with job control tested against bash, and a neural network written from scratch in C.",
+  },
+  {
+    icon: "chip",
+    title: "Computer Vision & Edge AI",
+    body: "HOG and SIFT against ResNet, VGG and ViT for Indic script identification, fully local prompt optimization for CLIP, and MobileNetV3 inference on an ARM Cortex-M4 microcontroller.",
+  },
+];
 
 export const contactLinks: readonly ContactLink[] = [
   {
@@ -210,6 +246,10 @@ export const experience: readonly ExperienceEntry[] = [
       "Built an LLM-as-a-judge and lm-eval-harness evaluation suite to measure correctness, hallucination, and general-capability retention across experiments.",
     ],
     tech: ["Python", "PyTorch", "Hugging Face Transformers", "vLLM", "lm-eval-harness"],
+    metrics: [
+      { label: "Factual QA accuracy", value: "10.3% → 74.0%" },
+      { label: "Reference coverage", value: "8.2% → 73.2%" },
+    ],
   },
   {
     id: "diversity-maximisation",
@@ -266,12 +306,13 @@ export const projects: readonly Project[] = [
     summary: "Real-time collaborative Markdown editor with CRDT sync across a multi-node server tier.",
     period: "Oct 2026",
     scene: "workshop",
+    category: "systems",
     problem:
       "Several people editing one document at once need to see each other's changes within milliseconds, keep working offline, and stay consistent when a server node fails.",
     approach: [
       "Built real-time editing on the Yjs CRDT over WebSockets, with presence, offline edits stored in the browser and merged on reconnect, version history with restore, and anchored comments.",
       "Scaled the sync tier across several Node.js servers behind nginx, using Redis pub/sub to keep documents consistent during failover and PostgreSQL for storage, sign-in and role-based sharing.",
-      "In a simulated test with 1,000 people editing at once, edits reached other users within 4 ms for 95% of updates, down from 15 ms, by keeping everyone on the same document on the same server.",
+      "Reduced p95 sync latency from 15 ms to 4 ms using document sticky routing instead of round-robin across 1,000 synthetic editors.",
       "Document search went from 124 ms to 5 ms (median, rare terms, 20,000 documents) using PostgreSQL full-text search.",
       "Covered the main user flows (two editors, offline, viewer role, comments, history, search) with Playwright end-to-end tests.",
     ],
@@ -290,7 +331,7 @@ export const projects: readonly Project[] = [
       "GitHub Actions",
     ],
     metrics: [
-      { label: "p95 sync (simulated 1,000 editors)", value: "4 ms" },
+      { label: "p95 sync (1,000 synthetic editors)", value: "15 → 4 ms" },
       { label: "Search", value: "124 → 5 ms" },
     ],
     repo: "https://github.com/AurindumBanerjee/InkWell",
@@ -302,6 +343,7 @@ export const projects: readonly Project[] = [
     summary: "Hybrid-retrieval RAG over PDFs, with streamed answers that cite the page.",
     period: "May 2025 - Oct 2026",
     scene: "archive",
+    category: "ai",
     problem:
       "Dense embeddings match meaning but blur rare, exact terms such as names, numbers and jargon, so dense-only retrieval often misses the passage that actually answers a question.",
     approach: [
@@ -335,6 +377,7 @@ export const projects: readonly Project[] = [
     summary: "A C++ database engine whose aggregate indexes answer range SUM/MIN/MAX/COUNT in logarithmic time.",
     period: "Sep 2024 - Oct 2026",
     scene: "datastore",
+    category: "systems",
     problem:
       "Aggregate queries over a range of rows degrade to reading every matching row unless the storage layer is built to answer ranges directly.",
     approach: [
@@ -359,6 +402,7 @@ export const projects: readonly Project[] = [
     summary: "Gradient-free Interpretable Prompt Optimization for CLIP, run fully locally.",
     period: "February 2026 - April 2026",
     scene: "multimodal-lab",
+    category: "ai",
     problem:
       "Interpretable Prompt Optimization for CLIP depended on hosted GPT-3.5 and MiniCPM calls, tying reproduction of the method to paid external APIs.",
     approach: [
@@ -391,6 +435,7 @@ export const projects: readonly Project[] = [
     summary: "A Unix shell in C++ with job control, pipelines, redirection and expansion, tested against bash.",
     period: "Mar 2025 - Oct 2026",
     scene: "terminal",
+    category: "systems",
     problem:
       "A shell is the thinnest useful layer over the kernel - writing one means handling process lifecycles and redirection directly, with no runtime to hide behind.",
     approach: [
@@ -405,7 +450,7 @@ export const projects: readonly Project[] = [
       { label: "Documented differences", value: "7" },
     ],
     repo: "https://github.com/AurindumBanerjee/AlpShell",
-    featured: true,
+    featured: false,
   },
   {
     id: "bxss",
@@ -413,6 +458,7 @@ export const projects: readonly Project[] = [
     summary: "Dockerized testbed for automated Blind XSS attack and defense evaluation.",
     period: "February 2026 - April 2026",
     scene: "security",
+    category: "security",
     problem:
       "Blind XSS fires long after injection, in a context the attacker never sees - which makes it hard to reproduce, and harder to prove a mitigation actually works.",
     approach: [
@@ -433,7 +479,7 @@ export const projects: readonly Project[] = [
     ],
     metrics: [],
     repo: "https://github.com/AurindumBanerjee/BXSS-Attack-and-Defense",
-    featured: true,
+    featured: false,
   },
   {
     id: "script-identifier",
@@ -441,6 +487,7 @@ export const projects: readonly Project[] = [
     summary: "Scene-text script classification across 13 Indic languages.",
     period: "February 2025 - April 2025",
     scene: "observatory",
+    category: "vision",
     problem:
       "Scene text in Indic scripts must be identified before it can be read - and the class distribution is heavily imbalanced.",
     approach: [
@@ -467,7 +514,7 @@ export const projects: readonly Project[] = [
       { label: "Scripts covered", value: "13" },
     ],
     repo: "https://github.com/AurindumBanerjee/Script-Identifier",
-    featured: true,
+    featured: false,
   },
   {
     id: "tinyml-project",
@@ -475,6 +522,7 @@ export const projects: readonly Project[] = [
     summary: "MobileNetV3 image recognition running on an ARM Cortex-M4 microcontroller.",
     period: "April 2024 - December 2024",
     scene: "workshop",
+    category: "vision",
     problem:
       "A microcontroller has kilobytes of RAM and no operating system - a convolutional network has to be shrunk and compiled down to fit.",
     approach: [
@@ -500,6 +548,7 @@ export const projects: readonly Project[] = [
     summary: "Forward propagation, backpropagation, and gradient descent, written from scratch.",
     period: "March 2024 - April 2024",
     scene: "workshop",
+    category: "ai",
     problem:
       "Autograd frameworks hide the arithmetic - implementing a network in C means deriving and allocating every step yourself.",
     approach: [
@@ -524,6 +573,7 @@ export const projects: readonly Project[] = [
     summary: "Self-supervised anomaly detection for surveillance video.",
     period: "April 2024 - December 2024",
     scene: "observatory",
+    category: "vision",
     problem:
       "Anomalies in surveillance footage are rare and weakly labelled, so supervision has to come from the video's own temporal structure.",
     approach: [
@@ -557,6 +607,10 @@ export const skillCategories: readonly SkillCategory[] = [
       "NumPy",
       "Pandas",
       "vLLM",
+      "lm-eval-harness",
+      "FastEmbed",
+      "ONNX Runtime",
+      "BM25",
       "LangChain",
     ],
   },
@@ -608,8 +662,6 @@ export const skillCategories: readonly SkillCategory[] = [
       "Google Colab",
       "Hugging Face Spaces",
       "Modal",
-      "Trello",
-      "Jira",
       "Verilog",
     ],
   },

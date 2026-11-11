@@ -7,7 +7,7 @@ import { useEffect, useLayoutEffect, useRef } from "react";
 const useIsomorphicLayoutEffect =
   typeof window !== "undefined" ? useLayoutEffect : useEffect;
 import { AnimatePresence, motion } from "framer-motion";
-import { X, Github } from "lucide-react";
+import { X, Github, ArrowLeft, ArrowRight } from "lucide-react";
 import type { Project } from "@/data/resume";
 import { PixelEnvironment } from "./PixelEnvironment";
 
@@ -24,13 +24,31 @@ const FOCUSABLE =
 export function ProjectModal({
   project,
   onClose,
+  prev,
+  next,
+  onNavigate,
 }: {
   readonly project: Project | null;
   readonly onClose: () => void;
+  /** Neighbouring case studies in display order; null at either end. */
+  readonly prev?: Project | null;
+  readonly next?: Project | null;
+  readonly onNavigate?: (id: string) => void;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
+  const backdropRef = useRef<HTMLDivElement>(null);
   const restoreTo = useRef<HTMLElement | null>(null);
   const open = project !== null;
+
+  // Kept in a ref so the key handler below sees the current neighbours
+  // without re-running the open/close effect on every navigation.
+  const nav = useRef({ prev, next, onNavigate });
+  nav.current = { prev, next, onNavigate };
+
+  // A new case study starts at its top.
+  useEffect(() => {
+    backdropRef.current?.scrollTo({ top: 0 });
+  }, [project?.id]);
 
   // Remember the trigger, so focus can go home on close. Captured in a layout
   // effect: by the time the passive effect below runs, the click that opened
@@ -58,6 +76,15 @@ export function ProjectModal({
       if (event.key === "Escape") {
         event.preventDefault();
         onClose();
+        return;
+      }
+      if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+        const { prev: before, next: after, onNavigate: go } = nav.current;
+        const target = event.key === "ArrowLeft" ? before : after;
+        if (target && go) {
+          event.preventDefault();
+          go(target.id);
+        }
         return;
       }
       if (event.key !== "Tab" || !panelRef.current) return;
@@ -102,6 +129,7 @@ export function ProjectModal({
       {project ? (
         <motion.div
           key="backdrop"
+          ref={backdropRef}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -226,6 +254,51 @@ export function ProjectModal({
                 </div>
               ) : null}
             </div>
+
+            {/* Step through case studies without closing; ←/→ keys do the same. */}
+            {onNavigate && (prev || next) ? (
+              <nav
+                aria-label="Other case studies"
+                className="flex items-stretch justify-between gap-4 border-t-4 border-slate-edge bg-slate-mid px-5 py-3"
+              >
+                {prev ? (
+                  <button
+                    type="button"
+                    onClick={() => onNavigate(prev.id)}
+                    aria-label={`Previous case study: ${prev.name}`}
+                    aria-keyshortcuts="ArrowLeft"
+                    className="flex min-w-0 items-center gap-2 text-left text-stone-mid transition-colors hover:text-lantern-bright"
+                  >
+                    <ArrowLeft size={16} aria-hidden="true" className="flex-none" />
+                    <span className="min-w-0">
+                      <span className="block font-pixel text-pixel-sm uppercase tracking-[0.14em] text-lantern">
+                        Previous
+                      </span>
+                      <span className="block truncate text-sm">{prev.name}</span>
+                    </span>
+                  </button>
+                ) : (
+                  <span />
+                )}
+                {next ? (
+                  <button
+                    type="button"
+                    onClick={() => onNavigate(next.id)}
+                    aria-label={`Next case study: ${next.name}`}
+                    aria-keyshortcuts="ArrowRight"
+                    className="flex min-w-0 items-center gap-2 text-right text-stone-mid transition-colors hover:text-lantern-bright"
+                  >
+                    <span className="min-w-0">
+                      <span className="block font-pixel text-pixel-sm uppercase tracking-[0.14em] text-lantern">
+                        Next
+                      </span>
+                      <span className="block truncate text-sm">{next.name}</span>
+                    </span>
+                    <ArrowRight size={16} aria-hidden="true" className="flex-none" />
+                  </button>
+                ) : null}
+              </nav>
+            ) : null}
           </motion.div>
         </motion.div>
       ) : null}

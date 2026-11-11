@@ -53,7 +53,7 @@ export function Navbar() {
       )}
       style={
         scrolled
-          ? { boxShadow: "0 4px 0 0 rgba(55,65,92,0.55)" }
+          ? { boxShadow: "0 4px 0 0 var(--slate-edge)" }
           : undefined
       }
     >
@@ -75,10 +75,10 @@ export function Navbar() {
             aria-hidden="true"
             focusable="false"
           >
-            <rect width={8} height={8} fill="#111522" />
-            <rect x={0} y={0} width={8} height={1} fill="#37415c" />
-            <rect x={0} y={7} width={8} height={1} fill="#07080c" />
-            <path d="M2 6 V3 h1 V2 h2 v1 h1 v3 h-1 V4 h-2 v2 z" fill="#e8a33d" />
+            <rect width={8} height={8} fill="var(--slate-deep)" />
+            <rect x={0} y={0} width={8} height={1} fill="var(--slate-edge)" />
+            <rect x={0} y={7} width={8} height={1} fill="var(--void)" />
+            <path d="M2 6 V3 h1 V2 h2 v1 h1 v3 h-1 V4 h-2 v2 z" fill="var(--lantern)" />
           </svg>
           <span className="font-pixel text-pixel-base uppercase tracking-[0.12em] text-stone-bright transition-colors group-hover:text-lantern-bright">
             Aurindum

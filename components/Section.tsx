@@ -87,7 +87,7 @@ export function PixelRule({ className }: { readonly className?: string }) {
       className={cn("h-1 w-full", className)}
       style={{
         backgroundImage:
-          "repeating-linear-gradient(to right, #37415c 0 8px, transparent 8px 16px)",
+          "repeating-linear-gradient(to right, var(--slate-edge) 0 8px, transparent 8px 16px)",
       }}
     />
   );

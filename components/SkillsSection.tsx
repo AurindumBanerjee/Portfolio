@@ -59,7 +59,7 @@ export function SkillsSection() {
                   <li
                     key={item}
                     className="bg-slate-mid px-3 py-2 font-mono text-xs text-stone-mid transition-colors hover:bg-slate-soft hover:text-stone-bright"
-                    style={{ boxShadow: "inset 0 0 0 1px #37415c" }}
+                    style={{ boxShadow: "inset 0 0 0 1px var(--slate-edge)" }}
                   >
                     {item}
                   </li>
